@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Red Pen · 雅思考官找茬</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+:root{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",sans-serif;color:#202620;background:#f5f5ef}*{box-sizing:border-box}body{margin:0}button{font:inherit;cursor:pointer}button:focus-visible{outline:3px solid #ca573c;outline-offset:4px}.word{display:inline;border:0;background:transparent;color:inherit;padding:4px 3px;border-radius:5px;transition:background .15s;line-height:1.85}.word:hover{background:#e9e9de}.word.selected{background:#f6dccf;color:#983e28;box-shadow:0 2px 0 #c25b3e}.word.answer{background:#deead6;color:#325535;box-shadow:0 2px 0 #698d59}.word.missed{background:#f6dccf;text-decoration:line-through;text-decoration-color:#bd5438}.option{width:100%;display:flex;align-items:center;gap:14px;text-align:left;border:1px solid #dedfd4;border-radius:10px;background:#fff;padding:15px 18px;transition:.15s}.option:hover:not(:disabled){border-color:#70825d;background:#f5f7ef}.option:disabled{cursor:default}.option.correct{border-color:#78966a;background:#edf4e7}.option.wrong{border-color:#c77762;background:#fcf0ea}.letter{font-size:12px;border:1px solid #dddeda;border-radius:5px;padding:3px 7px;color:#74796d} .fade{animation:appear .25s ease-out}@keyframes appear{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}[hidden]{display:none!important}.serif{font-family:Georgia,"Times New Roman",serif}.primary{background:#2e4130;color:white;border:0;border-radius:8px;padding:13px 22px;font-weight:600}.primary:hover{background:#435c3f}button:disabled{opacity:1} .tiny{font-size:11px;letter-spacing:.13em;text-transform:uppercase}
+</style>
+</head>
+<body>
+<div class="max-w-5xl mx-auto px-5 sm:px-10">
+<header class="flex justify-between items-center py-7 border-b border-[#dedfd5]">
+<a href="./index.html" class="flex items-center gap-2.5 no-underline text-inherit"><span class="w-8 h-8 bg-[#bd5438] rounded-full grid place-items-center text-white text-lg" aria-hidden="true">✎</span><span class="font-bold tracking-tight text-lg">red pen<span class="text-[#bd5438]">.</span></span></a>
+<span class="tiny text-[#7b8174]">IELTS WRITING LAB</span>
+</header>
+<main class="max-w-2xl mx-auto pt-10 sm:pt-14 pb-10">
+<div class="flex items-center gap-2 text-xs text-[#64755a] font-medium"><span class="w-1.5 h-1.5 rounded-full bg-[#718463]"></span> 5 分钟，换个考官视角</div>
+<h1 class="text-3xl sm:text-4xl font-bold tracking-tight mt-4 mb-3">这一次，你来当考官。</h1>
+<p class="text-sm sm:text-base text-[#7a7e71] leading-relaxed">一支红笔，五个错误。找出小作文里不够准确的表达。</p>
+<section id="game" class="mt-9">
+<div class="flex justify-between text-xs mb-3"><span id="progressLabel" class="font-semibold">QUESTION 01 <span class="text-[#94988a]">/ 05</span></span><span id="scoreLabel" class="text-[#727969]">已答对 0 题</span></div>
+<div id="progress" class="flex gap-1.5 mb-6" aria-label="关卡进度"></div>
+<article class="bg-white rounded-2xl border border-[#e0e1d7] shadow-[0_5px_24px_#29351f05] overflow-hidden">
+<div class="px-6 sm:px-8 py-4 border-b border-[#eeeee6] flex justify-between items-center"><span id="topic" class="tiny text-[#7b8172]"></span><span class="text-xs text-[#9b9e92]">学生习作 · 节选</span></div>
+<div class="p-6 sm:p-8"><div class="flex items-center gap-2 mb-5"><span class="text-[#be583e] text-xs font-bold">01</span><span class="text-xs text-[#858a7b]">点击句中有错误的单词或词组</span></div>
+<p id="sentence" class="serif text-2xl sm:text-[29px] leading-loose m-0" aria-label="待批改句子"></p>
+<div id="hint" class="mt-6 text-xs text-[#95998b]">每句话只有一处目标错误，点击即可标记。</div>
+</div></article>
+<section id="choicesSection" class="mt-7 fade" hidden><div class="flex gap-2 items-center mb-3"><span class="text-[#be583e] text-xs font-bold">02</span><h2 class="text-sm font-medium">这属于哪一类错误？</h2></div><div id="choices" class="space-y-2"></div></section>
+<section id="feedback" class="mt-6 rounded-xl border p-5 sm:p-6 fade" role="status" aria-live="polite" hidden></section>
+<div id="nextWrap" class="mt-5 flex justify-end" hidden><button id="next" class="primary">下一题 <span class="ml-5">→</span></button></div>
+</section>
+<section id="results" class="mt-9 bg-white border border-[#e0e1d7] rounded-2xl p-8 sm:p-12 text-center fade" hidden>
+<div class="tiny text-[#7b8172]">SESSION COMPLETE</div><div class="text-5xl mt-6 mb-4" aria-hidden="true">✎</div><h2 class="text-2xl font-bold">本轮批改完成</h2><p id="resultScore" class="text-5xl font-bold text-[#3d5738] my-6"></p><p id="resultText" class="text-sm text-[#7a7e71] leading-7"></p><button id="restart" class="primary mt-7">再练一轮 ↻</button>
+</section>
+<footer class="mt-10 flex justify-between gap-4 text-[11px] text-[#999d90]"><span>小作文 · 句子纠错训练</span><span>无需登录，打开即练</span></footer>
+</main></div>
+<script>
+'use strict';
+const questions = [
+{topic:'TASK 1 / LINE GRAPH',tokens:['The','number of visitors','have','increased','steadily','since 2010.'],target:2,options:['主谓不一致','中式英语','介词搭配错误'],category:0,correction:'The number of visitors has increased steadily since 2010.',explanation:'主语是单数的 the number（数量），因此助动词应使用 has。'},
+{topic:'TASK 1 / BAR CHART',tokens:['The proportion of commuters','using bicycles','was','20 percentage','in 2020.'],target:3,options:['时态错误','百分比表达错误','比较对象不一致'],category:1,correction:'The proportion of commuters using bicycles was 20 percent in 2020.',explanation:'具体百分比应写成数字 + percent；percentage 表示“百分比”这一概念。'},
+{topic:'TASK 1 / LINE GRAPH',tokens:['Car sales','increased','from 200','at','350','between 2010 and 2020.'],target:3,options:['主谓不一致','形容词与副词混用','介词搭配错误'],category:2,correction:'Car sales increased from 200 to 350 between 2010 and 2020.',explanation:'描述数值从起点上升到终点，使用固定结构 from A to B。'},
+{topic:'TASK 1 / BAR CHART',tokens:['The chart','shows','that','London’s population','was larger than','Paris','in 2015.'],target:5,options:['比较对象不一致','时态错误','冠词使用错误'],category:0,correction:'The chart shows that London’s population was larger than that of Paris in 2015.',explanation:'人口应与人口比较，用 that of Paris 代替 Paris，使比较对象保持一致。'},
+{topic:'TASK 1 / LINE GRAPH',tokens:['The unemployment rate','fell','dramatic','between 2012 and 2014.'],target:2,options:['介词搭配错误','形容词与副词混用','主谓不一致'],category:1,correction:'The unemployment rate fell dramatically between 2012 and 2014.',explanation:'修饰动词 fell 应使用副词 dramatically，而不是形容词 dramatic。'}
+];
+const $ = id => document.getElementById(id);
+let current=0, selected=null, answered=false, score=0;
+function render(){
+const q=questions[current]; selected=null;answered=false;
+$('progressLabel').innerHTML=`QUESTION ${String(current+1).padStart(2,'0')} <span class="text-[#94988a]">/ 05</span>`;
+$('scoreLabel').textContent=`已答对 ${score} 题`;
+$('progress').innerHTML=questions.map((_,i)=>`<div class="h-1 flex-1 rounded-full" style="background:${i<=current?'#6b805c':'#e1e3d7'}"></div>`).join('');
+$('topic').textContent=q.topic; $('sentence').replaceChildren();
+q.tokens.forEach((token,i)=>{const b=document.createElement('button');b.className='word';b.textContent=token;b.setAttribute('aria-pressed','false');b.onclick=()=>select(i);$('sentence').append(b,document.createTextNode(' '));});
+$('hint').textContent='每句话只有一处目标错误，点击即可标记。';
+$('choices').replaceChildren();
+q.options.forEach((option,i)=>{const b=document.createElement('button');b.className='option';const letter=document.createElement('span');letter.className='letter';letter.textContent='ABC'[i];b.append(letter,document.createTextNode(option));b.onclick=()=>answer(i);$('choices').append(b);});
+['choicesSection','feedback','nextWrap'].forEach(id=>$(id).hidden=true);
+$('next').innerHTML=current===4?'查看本轮成绩 <span class="ml-5">→</span>':'下一题 <span class="ml-5">→</span>';
+}
+function select(i){if(answered)return;selected=i;[...$('sentence').querySelectorAll('button')].forEach((b,n)=>{b.classList.toggle('selected',n===i);b.setAttribute('aria-pressed',String(n===i));});$('hint').textContent=`已标记「${questions[current].tokens[i]}」，请选择下方错误类型。`;$('choicesSection').hidden=false;}
+function answer(i){if(answered||selected===null)return;answered=true;const q=questions[current],found=selected===q.target,classified=i===q.category,correct=found&&classified;if(correct)score++;
+[...$('sentence').querySelectorAll('button')].forEach((b,n)=>{b.disabled=true;b.classList.remove('selected');b.classList.toggle('answer',n===q.target);b.classList.toggle('missed',n===selected&&!found);});
+[...$('choices').children].forEach((b,n)=>{b.disabled=true;b.classList.toggle('correct',n===q.category);b.classList.toggle('wrong',n===i&&!classified);});
+$('hint').textContent=`正确标记：${q.tokens[q.target]} · ${q.options[q.category]}`;
+$('scoreLabel').textContent=`已答对 ${score} 题`;
+$('feedback').style.background=correct?'#edf3e7':'#fcf2eb';$('feedback').style.borderColor=correct?'#d4e0c9':'#eedbce';
+$('feedback').innerHTML=`<div class="font-semibold text-sm mb-5">${correct?'✅ 找得准，改得对！':!found?'❌ 目标词选错了，再看一下绿色标记。':'❌ 找对了位置，但错误类型还差一点。'}</div><div class="tiny text-[#7b8172] mb-2">Correction</div><p class="serif text-xl leading-relaxed mb-4">${q.correction}</p><div class="tiny text-[#7b8172] mb-2">Explanation</div><p class="text-sm leading-7 m-0">${q.explanation}</p>`;
+$('feedback').hidden=false;$('nextWrap').hidden=false;
+}
+$('next').onclick=()=>{if(!answered)return;if(current<4){current++;render();}else{$('game').hidden=true;$('results').hidden=false;$('resultScore').textContent=`${score} / 5`;$('resultText').textContent=score===5?'全对！你已经能准确定位错误，并判断修改原因。':`你有 ${score} 题同时找对位置和类型。再练一轮，把容易漏掉的表达记牢。`;$('restart').focus();}};
+$('restart').onclick=()=>{current=0;score=0;$('results').hidden=true;$('game').hidden=false;render();};
+render();
+</script>
+</body>
+</html>
