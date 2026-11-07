@@ -12,12 +12,12 @@
 <div class="max-w-5xl mx-auto px-5 sm:px-10">
 <header class="flex justify-between items-center py-7 border-b border-[#dedfd5]">
 <a href="./index.html" class="flex items-center gap-2.5 no-underline text-inherit"><span class="w-8 h-8 bg-[#bd5438] rounded-full grid place-items-center text-white text-lg" aria-hidden="true">✎</span><span class="font-bold tracking-tight text-lg">red pen<span class="text-[#bd5438]">.</span></span></a>
-<span class="tiny text-[#7b8174]">IELTS WRITING LAB</span>
+<button id="soundToggle" type="button" class="text-xs text-[#64755a] border border-[#dedfd5] rounded-full px-3 py-2" aria-pressed="true">♪ 音效开</button>
 </header>
 <main class="max-w-2xl mx-auto pt-10 sm:pt-14 pb-10">
-<div class="flex items-center gap-2 text-xs text-[#64755a] font-medium"><span class="w-1.5 h-1.5 rounded-full bg-[#718463]"></span> 5 分钟，换个考官视角</div>
+<div class="flex items-center gap-2 text-xs text-[#64755a] font-medium"><span class="w-1.5 h-1.5 rounded-full bg-[#718463]"></span> 每天练一点，换个考官视角</div>
 <h1 class="text-3xl sm:text-4xl font-bold tracking-tight mt-4 mb-3">这一次，你来当考官。</h1>
-<p class="text-sm sm:text-base text-[#7a7e71] leading-relaxed">一支红笔，五个错误。找出小作文里不够准确的表达。</p>
+<p class="text-sm sm:text-base text-[#7a7e71] leading-relaxed">每轮随机 5 题，一支红笔。找出小作文里不够准确的表达。</p>
 <section id="game" class="mt-9">
 <div class="flex justify-between text-xs mb-3"><span id="progressLabel" class="font-semibold">QUESTION 01 <span class="text-[#94988a]">/ 05</span></span><span id="scoreLabel" class="text-[#727969]">已答对 0 题</span></div>
 <div id="progress" class="flex gap-1.5 mb-6" aria-label="关卡进度"></div>
@@ -38,18 +38,54 @@
 </main></div>
 <script>
 'use strict';
-const questions = [
+const questionBank = [
 {topic:'TASK 1 / LINE GRAPH',tokens:['The','number of visitors','have','increased','steadily','since 2010.'],target:2,options:['主谓不一致','中式英语','介词搭配错误'],category:0,correction:'The number of visitors has increased steadily since 2010.',explanation:'主语是单数的 the number（数量），因此助动词应使用 has。'},
 {topic:'TASK 1 / BAR CHART',tokens:['The proportion of commuters','using bicycles','was','20 percentage','in 2020.'],target:3,options:['时态错误','百分比表达错误','比较对象不一致'],category:1,correction:'The proportion of commuters using bicycles was 20 percent in 2020.',explanation:'具体百分比应写成数字 + percent；percentage 表示“百分比”这一概念。'},
 {topic:'TASK 1 / LINE GRAPH',tokens:['Car sales','increased','from 200','at','350','between 2010 and 2020.'],target:3,options:['主谓不一致','形容词与副词混用','介词搭配错误'],category:2,correction:'Car sales increased from 200 to 350 between 2010 and 2020.',explanation:'描述数值从起点上升到终点，使用固定结构 from A to B。'},
 {topic:'TASK 1 / BAR CHART',tokens:['The chart','shows','that','London’s population','was larger than','Paris','in 2015.'],target:5,options:['比较对象不一致','时态错误','冠词使用错误'],category:0,correction:'The chart shows that London’s population was larger than that of Paris in 2015.',explanation:'人口应与人口比较，用 that of Paris 代替 Paris，使比较对象保持一致。'},
-{topic:'TASK 1 / LINE GRAPH',tokens:['The unemployment rate','fell','dramatic','between 2012 and 2014.'],target:2,options:['介词搭配错误','形容词与副词混用','主谓不一致'],category:1,correction:'The unemployment rate fell dramatically between 2012 and 2014.',explanation:'修饰动词 fell 应使用副词 dramatically，而不是形容词 dramatic。'}
+{topic:'TASK 1 / LINE GRAPH',tokens:['The unemployment rate','fell','dramatic','between 2012 and 2014.'],target:2,options:['介词搭配错误','形容词与副词混用','主谓不一致'],category:1,correction:'The unemployment rate fell dramatically between 2012 and 2014.',explanation:'修饰动词 fell 应使用副词 dramatically，而不是形容词 dramatic。'},
+{"topic": "TASK 1 / BAR CHART", "tokens": ["The number of cars", "rose", "by", "200 to 500", "over the period."], "target": 2, "options": ["增量与终值混淆", "时态错误", "主谓不一致"], "category": 0, "correction": "The number of cars rose from 200 to 500 over the period.", "explanation": "200 和 500 是起点与终点，用 from；by 后接增长的差值。"},
+{"topic": "TASK 1 / LINE GRAPH", "tokens": ["The rate", "increased", "from 20% to 30%,", "a rise of", "10 percent."], "target": 4, "options": ["冠词错误", "百分比与百分点混淆", "介词搭配错误"], "category": 1, "correction": "The rate increased from 20% to 30%, a rise of 10 percentage points.", "explanation": "两个百分比直接相减得到百分点；从 20% 到 30% 上升了 10 个百分点。"},
+{"topic": "TASK 1 / BAR CHART", "tokens": ["There", "was", "three main sources", "of energy", "in 2020."], "target": 1, "options": ["时态错误", "词义错误", "主谓不一致"], "category": 2, "correction": "There were three main sources of energy in 2020.", "explanation": "there be 结构中的 three main sources 是复数，因此使用 were。"},
+{"topic": "TASK 1 / LINE GRAPH", "tokens": ["The figure", "reached", "a peak", "in", "80 million", "in 2018."], "target": 3, "options": ["介词搭配错误", "比较对象不一致", "时态错误"], "category": 0, "correction": "The figure reached a peak of 80 million in 2018.", "explanation": "表示峰值是多少，使用 a peak of + 数值。"},
+{"topic": "TASK 1 / PIE CHART", "tokens": ["Transport", "accounted", "of", "25% of total expenditure."], "target": 2, "options": ["主谓不一致", "介词搭配错误", "词性错误"], "category": 1, "correction": "Transport accounted for 25% of total expenditure.", "explanation": "表示“占……比例”的固定搭配是 account for。"},
+{"topic": "TASK 1 / BAR CHART", "tokens": ["The factory", "produced", "five millions", "cars", "in 2020."], "target": 2, "options": ["时态错误", "冠词错误", "数词用法错误"], "category": 2, "correction": "The factory produced five million cars in 2020.", "explanation": "million 前有具体数字时不加 s；millions of 才表示不确定的数百万。"},
+{"topic": "TASK 1 / LINE GRAPH", "tokens": ["Sales", "remained", "steadily", "throughout the period."], "target": 2, "options": ["形容词与副词混用", "介词搭配错误", "主谓不一致"], "category": 0, "correction": "Sales remained steady throughout the period.", "explanation": "remain 作系动词时后接形容词 steady，描述销量保持稳定的状态。"},
+{"topic": "TASK 1 / BAR CHART", "tokens": ["The chart", "compares", "the amount of", "students", "in three schools."], "target": 2, "options": ["时态错误", "可数与不可数混用", "比较级错误"], "category": 1, "correction": "The chart compares the number of students in three schools.", "explanation": "students 是可数名词复数，数量用 the number of 表达。"},
+{"topic": "TASK 1 / LINE GRAPH", "tokens": ["In 2010,", "the figure", "rises", "to 60,000."], "target": 2, "options": ["介词搭配错误", "主谓不一致", "时态错误"], "category": 2, "correction": "In 2010, the figure rose to 60,000.", "explanation": "2010 年是已经结束的过去时间，描述当年的数值使用一般过去时 rose。"},
+{"topic": "TASK 1 / BAR CHART", "tokens": ["The figure for France", "was", "more higher", "than that for Spain."], "target": 2, "options": ["比较级重复", "词性错误", "介词搭配错误"], "category": 0, "correction": "The figure for France was higher than that for Spain.", "explanation": "higher 本身已是比较级，不再加 more。"},
+{"topic": "TASK 1 / PROCESS DIAGRAM", "tokens": ["First,", "the beans", "are roast", "in a large oven."], "target": 2, "options": ["冠词错误", "被动语态错误", "比较对象不一致"], "category": 1, "correction": "First, the beans are roasted in a large oven.", "explanation": "豆子是被烘烤的，使用 be + 过去分词，即 are roasted。"},
+{"topic": "TASK 1 / MAP", "tokens": ["A new bridge", "was built", "between", "the river."], "target": 2, "options": ["词性错误", "时态错误", "介词搭配错误"], "category": 2, "correction": "A new bridge was built across the river.", "explanation": "桥横跨河流使用 across；between 用于两个对象之间。"},
+{"topic": "TASK 1 / PIE CHART", "tokens": ["Food and housing", "together", "accounted for", "a majority of 40%", "of the total."], "target": 3, "options": ["数量含义错误", "主谓不一致", "时态错误"], "category": 0, "correction": "Food and housing together accounted for 40% of the total.", "explanation": "majority 意为超过一半，而 40% 未超过 50%，应删去这一描述。"},
+{"topic": "TASK 1 / TABLE", "tokens": ["The table", "provides", "informations", "about household income."], "target": 2, "options": ["介词搭配错误", "不可数名词误用复数", "时态错误"], "category": 1, "correction": "The table provides information about household income.", "explanation": "information 是不可数名词，不加复数词尾 s。"},
+{"topic": "TASK 1 / BAR CHART", "tokens": ["The figure for men", "was twice", "as higher as", "that for women."], "target": 2, "options": ["冠词错误", "主谓不一致", "倍数比较结构错误"], "category": 2, "correction": "The figure for men was twice as high as that for women.", "explanation": "倍数比较使用 twice as + 形容词原级 + as，因此应写 as high as。"}
 ];
+function drawQuestions(){
+ const pool=[...questionBank];
+ for(let i=pool.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]];}
+ return pool.slice(0,5);
+}
+let questions=drawQuestions();
 const $ = id => document.getElementById(id);
 let current=0, selected=null, answered=false, score=0;
+let audioContext, soundEnabled=true;
+try { soundEnabled=localStorage.getItem('redpen-sound')!=='off'; } catch (_) {}
+function updateSoundButton(){ $('soundToggle').textContent=soundEnabled?'♪ 音效开':'♪ 音效关'; $('soundToggle').setAttribute('aria-pressed',String(soundEnabled)); }
+function playSound(kind){
+ if(!soundEnabled)return;
+ try {
+  const AudioAPI=window.AudioContext||window.webkitAudioContext;if(!AudioAPI)return;
+  audioContext ||= new AudioAPI();
+  if(audioContext.state==='suspended') audioContext.resume().catch(()=>{});
+  const notes={tap:[[560,0,.045]],next:[[440,0,.06],[580,.07,.07]],correct:[[523,0,.1],[659,.1,.1],[784,.2,.16]],wrong:[[220,0,.13],[165,.14,.17]],complete:[[523,0,.12],[659,.13,.12],[784,.26,.12],[1047,.4,.25]]}[kind];
+  notes.forEach(([frequency,delay,duration])=>{const oscillator=audioContext.createOscillator(),gain=audioContext.createGain(),start=audioContext.currentTime+delay;oscillator.type='sine';oscillator.frequency.value=frequency;gain.gain.setValueAtTime(0,start);gain.gain.linearRampToValueAtTime(.09,start+.008);gain.gain.exponentialRampToValueAtTime(.001,start+duration);oscillator.connect(gain);gain.connect(audioContext.destination);oscillator.start(start);oscillator.stop(start+duration+.02);});
+ }catch (_) { /* Audio is optional; the game remains playable. */ }
+}
+$('soundToggle').onclick=()=>{soundEnabled=!soundEnabled;if(!soundEnabled&&audioContext)audioContext.suspend().catch(()=>{});try{localStorage.setItem('redpen-sound',soundEnabled?'on':'off');}catch(_){}updateSoundButton();if(soundEnabled)playSound('tap');};
+updateSoundButton();
 function render(){
 const q=questions[current]; selected=null;answered=false;
-$('progressLabel').innerHTML=`QUESTION ${String(current+1).padStart(2,'0')} <span class="text-[#94988a]">/ 05</span>`;
+$('progressLabel').innerHTML=`QUESTION ${String(current+1).padStart(2,'0')} <span class="text-[#94988a]">/ ${String(questions.length).padStart(2,'0')}</span>`;
 $('scoreLabel').textContent=`已答对 ${score} 题`;
 $('progress').innerHTML=questions.map((_,i)=>`<div class="h-1 flex-1 rounded-full" style="background:${i<=current?'#6b805c':'#e1e3d7'}"></div>`).join('');
 $('topic').textContent=q.topic; $('sentence').replaceChildren();
@@ -58,20 +94,27 @@ $('hint').textContent='每句话只有一处目标错误，点击即可标记。
 $('choices').replaceChildren();
 q.options.forEach((option,i)=>{const b=document.createElement('button');b.className='option';const letter=document.createElement('span');letter.className='letter';letter.textContent='ABC'[i];b.append(letter,document.createTextNode(option));b.onclick=()=>answer(i);$('choices').append(b);});
 ['choicesSection','feedback','nextWrap'].forEach(id=>$(id).hidden=true);
-$('next').innerHTML=current===4?'查看本轮成绩 <span class="ml-5">→</span>':'下一题 <span class="ml-5">→</span>';
+$('next').innerHTML=current===questions.length-1?'查看本轮成绩 <span class="ml-5">→</span>':'下一题 <span class="ml-5">→</span>';
 }
-function select(i){if(answered)return;selected=i;[...$('sentence').querySelectorAll('button')].forEach((b,n)=>{b.classList.toggle('selected',n===i);b.setAttribute('aria-pressed',String(n===i));});$('hint').textContent=`已标记「${questions[current].tokens[i]}」，请选择下方错误类型。`;$('choicesSection').hidden=false;}
-function answer(i){if(answered||selected===null)return;answered=true;const q=questions[current],found=selected===q.target,classified=i===q.category,correct=found&&classified;if(correct)score++;
+function select(i){if(answered)return;playSound(i===questions[current].target?'correct':'wrong');selected=i;[...$('sentence').querySelectorAll('button')].forEach((b,n)=>{b.classList.toggle('selected',n===i);b.setAttribute('aria-pressed',String(n===i));});$('hint').textContent=`已标记「${questions[current].tokens[i]}」，请选择下方错误类型。`;$('choicesSection').hidden=false;}
+function escapeHTML(text){return text.replace(/[&<>"']/g,character=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[character]));}
+function correctionMarkup(q){
+ const before=q.tokens.slice(0,q.target).join(' '),after=q.tokens.slice(q.target+1).join(' ');
+ const prefix=before?before+' ':'',suffix=after?' '+after:'';
+ const replacement=q.correction.slice(prefix.length,q.correction.length-suffix.length);
+ return escapeHTML(prefix)+'<del style="color:#ad4d37;text-decoration-thickness:2px">'+escapeHTML(q.tokens[q.target])+'</del> <ins style="color:#325535;text-decoration:none;border-bottom:2px solid #78966a;font-weight:600">'+escapeHTML(replacement)+'</ins>'+escapeHTML(suffix);
+}
+function answer(i){if(answered||selected===null)return;answered=true;const q=questions[current],found=selected===q.target,classified=i===q.category,correct=found&&classified;if(correct)score++;playSound(correct?'correct':'wrong');
 [...$('sentence').querySelectorAll('button')].forEach((b,n)=>{b.disabled=true;b.classList.remove('selected');b.classList.toggle('answer',n===q.target);b.classList.toggle('missed',n===selected&&!found);});
 [...$('choices').children].forEach((b,n)=>{b.disabled=true;b.classList.toggle('correct',n===q.category);b.classList.toggle('wrong',n===i&&!classified);});
 $('hint').textContent=`正确标记：${q.tokens[q.target]} · ${q.options[q.category]}`;
 $('scoreLabel').textContent=`已答对 ${score} 题`;
 $('feedback').style.background=correct?'#edf3e7':'#fcf2eb';$('feedback').style.borderColor=correct?'#d4e0c9':'#eedbce';
-$('feedback').innerHTML=`<div class="font-semibold text-sm mb-5">${correct?'✅ 找得准，改得对！':!found?'❌ 目标词选错了，再看一下绿色标记。':'❌ 找对了位置，但错误类型还差一点。'}</div><div class="tiny text-[#7b8172] mb-2">Correction</div><p class="serif text-xl leading-relaxed mb-4">${q.correction}</p><div class="tiny text-[#7b8172] mb-2">Explanation</div><p class="text-sm leading-7 m-0">${q.explanation}</p>`;
+$('feedback').innerHTML=`<div class="font-semibold text-sm mb-5">${correct?'✅ 找得准，改得对！':!found?'❌ 目标词选错了，再看一下绿色标记。':'❌ 找对了位置，但错误类型还差一点。'}</div><div class="tiny text-[#7b8172] mb-2">Correction</div><p class="serif text-xl leading-relaxed mb-4">${correctionMarkup(q)}</p><div class="tiny text-[#7b8172] mb-2">Explanation</div><p class="text-sm leading-7 m-0">${q.explanation}</p>`;
 $('feedback').hidden=false;$('nextWrap').hidden=false;
 }
-$('next').onclick=()=>{if(!answered)return;if(current<4){current++;render();}else{$('game').hidden=true;$('results').hidden=false;$('resultScore').textContent=`${score} / 5`;$('resultText').textContent=score===5?'全对！你已经能准确定位错误，并判断修改原因。':`你有 ${score} 题同时找对位置和类型。再练一轮，把容易漏掉的表达记牢。`;$('restart').focus();}};
-$('restart').onclick=()=>{current=0;score=0;$('results').hidden=true;$('game').hidden=false;render();};
+$('next').onclick=()=>{if(!answered)return;if(current<questions.length-1){playSound('next');current++;render();}else{playSound('complete');$('game').hidden=true;$('results').hidden=false;$('resultScore').textContent=`${score} / ${questions.length}`;$('resultText').textContent=score===questions.length?'全对！你已经能准确定位错误，并判断修改原因。':`你有 ${score} 题同时找对位置和类型。再练一轮，把容易漏掉的表达记牢。`;$('restart').focus();}};
+$('restart').onclick=()=>{playSound('next');questions=drawQuestions();current=0;score=0;$('results').hidden=true;$('game').hidden=false;render();};
 render();
 </script>
 </body>
