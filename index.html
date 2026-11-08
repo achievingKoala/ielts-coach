@@ -6,6 +6,7 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
 :root{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",sans-serif;color:#202620;background:#f5f5ef}*{box-sizing:border-box}body{margin:0}button{font:inherit;cursor:pointer}button:focus-visible{outline:3px solid #ca573c;outline-offset:4px}.word{display:inline;border:0;background:transparent;color:inherit;padding:4px 3px;border-radius:5px;transition:background .15s;line-height:1.85}.word:hover{background:#e9e9de}.word.selected{background:#f6dccf;color:#983e28;box-shadow:0 2px 0 #c25b3e}.word.answer{background:#deead6;color:#325535;box-shadow:0 2px 0 #698d59}.word.missed{background:#f6dccf;text-decoration:line-through;text-decoration-color:#bd5438}.option{width:100%;display:flex;align-items:center;gap:14px;text-align:left;border:1px solid #dedfd4;border-radius:10px;background:#fff;padding:15px 18px;transition:.15s}.option:hover:not(:disabled){border-color:#70825d;background:#f5f7ef}.option:disabled{cursor:default}.option.correct{border-color:#78966a;background:#edf4e7}.option.wrong{border-color:#c77762;background:#fcf0ea}.letter{font-size:12px;border:1px solid #dddeda;border-radius:5px;padding:3px 7px;color:#74796d} .fade{animation:appear .25s ease-out}@keyframes appear{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}[hidden]{display:none!important}.serif{font-family:Georgia,"Times New Roman",serif}.primary{background:#2e4130;color:white;border:0;border-radius:8px;padding:13px 22px;font-weight:600}.primary:hover{background:#435c3f}button:disabled{opacity:1} .tiny{font-size:11px;letter-spacing:.13em;text-transform:uppercase}
+#enlargeChart{max-width:420px;margin-inline:auto}#chartSmall img,#chartSmall svg{display:block;width:auto!important;max-width:100%!important;height:auto!important;max-height:220px;margin-inline:auto;object-fit:contain}#chartPanel{margin-bottom:16px}
 </style>
 </head>
 <body>
@@ -48,7 +49,7 @@ const questionBank = [
 {topic:'TASK 1 / LINE GRAPH',tokens:['Car sales','increased','from 200','at','350','between 2010 and 2020.'],target:3,options:['主谓不一致','形容词与副词混用','介词搭配错误'],category:2,correction:'Car sales increased from 200 to 350 between 2010 and 2020.',explanation:'描述数值从起点上升到终点，使用固定结构 from A to B。'},
 {topic:'TASK 1 / BAR CHART',tokens:['The chart','shows','that','London’s population','was larger than','Paris','in 2015.'],target:5,options:['比较对象不一致','时态错误','冠词使用错误'],category:0,correction:'The chart shows that London’s population was larger than that of Paris in 2015.',explanation:'人口应与人口比较，用 that of Paris 代替 Paris，使比较对象保持一致。'},
 {topic:'TASK 1 / LINE GRAPH',tokens:['The unemployment rate','fell','dramatic','between 2012 and 2014.'],target:2,options:['介词搭配错误','形容词与副词混用','主谓不一致'],category:1,correction:'The unemployment rate fell dramatically between 2012 and 2014.',explanation:'修饰动词 fell 应使用副词 dramatically，而不是形容词 dramatic。'},
-{"topic": "TASK 1 / BAR CHART", "tokens": ["The number of cars", "rose", "by", "200 to 500", "over the period."], "target": 2, "options": ["增量与终值混淆", "时态错误", "主谓不一致"], "category": 0, "correction": "The number of cars rose from 200 to 500 over the period.", "explanation": "200 和 500 是起点与终点，用 from；by 后接增长的差值。"},
+{"topic": "TASK 1 / BAR CHART", "tokens": ["The number of cars", "rose", "by", "200 to 500", "over the period."], "target": 2, "options": ["介词搭配错误", "时态错误", "主谓不一致"], "category": 0, "correction": "The number of cars rose from 200 to 500 over the period.", "explanation": "200 和 500 是起点与终点，用 from；by 后接增长的差值。"},
 {"topic": "TASK 1 / LINE GRAPH", "tokens": ["The rate", "increased", "from 20% to 30%,", "a rise of", "10 percent."], "target": 4, "options": ["冠词错误", "百分比与百分点混淆", "介词搭配错误"], "category": 1, "correction": "The rate increased from 20% to 30%, a rise of 10 percentage points.", "explanation": "两个百分比直接相减得到百分点；从 20% 到 30% 上升了 10 个百分点。"},
 {"topic": "TASK 1 / BAR CHART", "tokens": ["There", "was", "three main sources", "of energy", "in 2020."], "target": 1, "options": ["时态错误", "词义错误", "主谓不一致"], "category": 2, "correction": "There were three main sources of energy in 2020.", "explanation": "there be 结构中的 three main sources 是复数，因此使用 were。"},
 {"topic": "TASK 1 / LINE GRAPH", "tokens": ["The figure", "reached", "a peak", "in", "80 million", "in 2018."], "target": 3, "options": ["介词搭配错误", "比较对象不一致", "时态错误"], "category": 0, "correction": "The figure reached a peak of 80 million in 2018.", "explanation": "表示峰值是多少，使用 a peak of + 数值。"},
@@ -246,8 +247,22 @@ function playSound(kind){
   const AudioAPI=window.AudioContext||window.webkitAudioContext;if(!AudioAPI)return;
   audioContext ||= new AudioAPI();
   if(audioContext.state==='suspended') audioContext.resume().catch(()=>{});
-  const notes={tap:[[560,0,.045]],next:[[440,0,.06],[580,.07,.07]],correct:[[523,0,.1],[659,.1,.1],[784,.2,.16]],wrong:[[220,0,.13],[165,.14,.17]],complete:[[523,0,.12],[659,.13,.12],[784,.26,.12],[1047,.4,.25]]}[kind];
-  notes.forEach(([frequency,delay,duration])=>{const oscillator=audioContext.createOscillator(),gain=audioContext.createGain(),start=audioContext.currentTime+delay;oscillator.type='sine';oscillator.frequency.value=frequency;gain.gain.setValueAtTime(0,start);gain.gain.linearRampToValueAtTime(.09,start+.008);gain.gain.exponentialRampToValueAtTime(.001,start+duration);oscillator.connect(gain);gain.connect(audioContext.destination);oscillator.start(start);oscillator.stop(start+duration+.02);});
+  const reward=kind==='correct'||kind==='locate'||kind==='complete';
+  const bell=kind==='correct'||kind==='locate';
+  const notes={tap:[[560,0,.045]],next:[[440,0,.06],[580,.07,.07]],locate:[[988,0,.3],[1976,.11,.46]],correct:[[988,0,.3],[1976,.11,.46]],wrong:[[220,0,.13],[165,.14,.17]],complete:[[659,0,.13],[880,.08,.15],[1047,.16,.17],[1568,.25,.32]]}[kind];
+  const output=audioContext.createGain();output.gain.value=bell?1:reward?.8:1;output.connect(audioContext.destination);
+  const tone=(frequency,delay,duration,volume,type)=>{
+   const oscillator=audioContext.createOscillator(),gain=audioContext.createGain(),start=audioContext.currentTime+delay;
+   oscillator.type=type;oscillator.frequency.setValueAtTime(frequency*1.025,start);oscillator.frequency.exponentialRampToValueAtTime(frequency,start+.025);
+   gain.gain.setValueAtTime(0,start);gain.gain.linearRampToValueAtTime(volume,start+.004);gain.gain.exponentialRampToValueAtTime(.001,start+duration);
+   oscillator.connect(gain);gain.connect(output);oscillator.start(start);oscillator.stop(start+duration+.02);
+  };
+  notes.forEach(([frequency,delay,duration])=>{
+   tone(frequency,delay,duration,bell?.38:reward?.24:.09,bell?'sine':reward?'triangle':'sine');
+   if(reward)tone(frequency*2,delay,duration*(bell?.45:.65),bell?.08:.045,'sine');
+  });
+  const finish=Math.max(...notes.map(([,delay,duration])=>delay+duration));
+  setTimeout(()=>output.disconnect(),(finish+.15)*1000);
  }catch (_) { /* Audio is optional; the game remains playable. */ }
 }
 $('soundToggle').onclick=()=>{soundEnabled=!soundEnabled;if(!soundEnabled&&audioContext)audioContext.suspend().catch(()=>{});try{localStorage.setItem('redpen-sound',soundEnabled?'on':'off');}catch(_){}updateSoundButton();if(soundEnabled)playSound('tap');};
@@ -271,10 +286,11 @@ function select(i){
  if(answered)return;
  const q=questions[current],found=i===q.target;
  if(firstSelected===null)firstSelected=i;
- playSound(found?'correct':'wrong');selected=i;
+ playSound(found?'locate':'wrong');selected=i;
  [...$('sentence').querySelectorAll('button')].forEach((b,n)=>{b.classList.toggle('selected',n===i);b.setAttribute('aria-pressed',String(n===i));});
  $('hint').textContent=found?`已找对「${q.tokens[i]}」，${q.mode==='repair'?'请选择下方替换表达':'请选择下方错误类型'}。`:'这处不是目标错误，再找找看。';
  $('choicesSection').hidden=!found;
+ if(found)celebrate($('sentence')); 
 }
 
 function escapeHTML(text){return text.replace(/[&<>"']/g,character=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[character]));}
@@ -284,6 +300,10 @@ function correctionMarkup(q){
  const replacement=q.correction.slice(prefix.length,q.correction.length-suffix.length);
  return escapeHTML(prefix)+'<del style="color:#ad4d37;text-decoration-thickness:2px">'+escapeHTML(q.tokens[q.target])+'</del> <ins style="color:#325535;text-decoration:none;border-bottom:2px solid #78966a;font-weight:600">'+escapeHTML(replacement)+'</ins>'+escapeHTML(suffix);
 }
+function celebrate(element){
+ if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+ element.animate([{transform:'scale(1)'},{transform:'scale(1.025)',offset:.35},{transform:'scale(1)'}],{duration:260,easing:'ease-out'});
+}
 function answer(i){if(answered||selected!==questions[current].target)return;answered=true;const q=questions[current],found=selected===q.target,classified=i===q.category,correct=found&&classified;if(correct)score++;sessionAttempts.push({firstLocated:firstSelected===q.target,classified,mode:q.mode,finalLocated:found});playSound(correct?'correct':'wrong');
 [...$('sentence').querySelectorAll('button')].forEach((b,n)=>{b.disabled=true;b.classList.remove('selected');b.classList.toggle('answer',n===q.target);b.classList.toggle('missed',n===selected&&!found);});
 [...$('choices').children].forEach((b,n)=>{b.disabled=true;b.classList.toggle('correct',n===q.category);b.classList.toggle('wrong',n===i&&!classified);});
@@ -291,7 +311,7 @@ $('hint').textContent=`正确标记：${q.tokens[q.target]} · ${q.options[q.cat
 updateSessionLabel();
 $('feedback').style.background=correct?'#edf3e7':'#fcf2eb';$('feedback').style.borderColor=correct?'#d4e0c9':'#eedbce';
 $('feedback').innerHTML=`<div class="font-semibold text-sm mb-5">${correct?'✅ 找得准，改得对！':!found?'❌ 目标词选错了，再看一下绿色标记。':(q.mode==='repair'?'❌ 找对了位置，但替换表达还不正确。':'❌ 找对了位置，但错误类型还差一点。')}</div><div class="tiny text-[#7b8172] mb-2">Correction</div><p class="serif text-xl leading-relaxed mb-4">${correctionMarkup(q)}</p><div class="tiny text-[#7b8172] mb-2">Explanation</div><p class="text-sm leading-7 m-0">${q.explanation}</p>`;
-$('feedback').hidden=false;$('nextWrap').hidden=false;
+$('feedback').hidden=false;$('nextWrap').hidden=false;if(correct)celebrate($('feedback'));
 }
 $('next').onclick=()=>{if(!answered)return;if(current<questions.length-1){playSound('next');current++;render();}else{playSound('complete');$('game').hidden=true;$('results').hidden=false;const stats=sessionStats();$('resultScore').textContent=`完成 ${stats.completed} 题`;$('resultText').textContent=`定位正确 ${stats.located}/${stats.completed}（${stats.locationRate}%）`;$('resultSkills').textContent=`纠错正确 ${stats.classified}/${stats.completed}（${stats.typeRate}%）`;$('restart').focus();}};
 function startRound(){playSound('next');questions=drawQuestions();current=0;score=0;sessionAttempts=[];firstSelected=null;$('results').hidden=true;$('game').hidden=false;render();}
