@@ -19,7 +19,7 @@
 <h1 class="text-3xl sm:text-4xl font-bold tracking-tight mt-4 mb-3">这一次，你来当考官。</h1>
 <p class="text-sm sm:text-base text-[#7a7e71] leading-relaxed">每轮 5 题，句句配图：练表达，也练读图。</p>
 <section id="game" class="mt-9">
-<div class="flex justify-between text-xs mb-3"><span id="progressLabel" class="font-semibold">QUESTION 01 <span class="text-[#94988a]">/ 05</span></span><span id="scoreLabel" class="text-[#727969]">已答对 0 题</span></div>
+<div class="flex justify-between text-xs mb-3"><span id="progressLabel" class="font-semibold">QUESTION 01 <span class="text-[#94988a]">/ 05</span></span><span id="scoreLabel" class="text-[#727969]">已完成 0 题</span></div>
 <div id="progress" class="flex gap-1.5 mb-6" aria-label="关卡进度"></div>
 <article class="bg-white rounded-2xl border border-[#e0e1d7] shadow-[0_5px_24px_#29351f05] overflow-hidden">
 <div class="px-6 sm:px-8 py-4 border-b border-[#eeeee6] flex justify-between items-center"><span id="topic" class="tiny text-[#7b8172]"></span><span class="text-xs text-[#9b9e92]">学生习作 · 节选</span></div>
@@ -108,6 +108,18 @@ function drawQuestions(){
 let questions=drawQuestions();
 const $ = id => document.getElementById(id);
 let current=0, selected=null, answered=false, score=0;
+let firstSelected=null, sessionAttempts=[];
+function sessionStats(){
+ const completed=sessionAttempts.length;
+ const located=sessionAttempts.filter(a=>a.firstLocated).length;
+ const classified=sessionAttempts.filter(a=>a.classified).length;
+ const rate=n=>completed?Math.round(n/completed*100):0;
+ return {completed,located,classified,locationRate:rate(located),typeRate:rate(classified)};
+}
+function updateSessionLabel(){
+ const stats=sessionStats();
+ $('scoreLabel').textContent=`已完成 ${stats.completed} 题`;
+}
 const chartSeries=[
  {name:'Northland',values:[8,7,6],color:'#334c6b',dash:''},
  {name:'Southland',values:[6,7,6],color:'#a65c40',dash:'8 4'},
@@ -173,10 +185,10 @@ function playSound(kind){
 $('soundToggle').onclick=()=>{soundEnabled=!soundEnabled;if(!soundEnabled&&audioContext)audioContext.suspend().catch(()=>{});try{localStorage.setItem('redpen-sound',soundEnabled?'on':'off');}catch(_){}updateSoundButton();if(soundEnabled)playSound('tap');};
 updateSoundButton();
 function render(){
-const q=questions[current]; selected=null;answered=false;
+const q=questions[current]; selected=null;firstSelected=null;answered=false;
 renderChart(q);
 $('progressLabel').innerHTML=`QUESTION ${String(current+1).padStart(2,'0')} <span class="text-[#94988a]">/ ${String(questions.length).padStart(2,'0')}</span>`;
-$('scoreLabel').textContent=`已答对 ${score} 题`;
+updateSessionLabel();
 $('progress').innerHTML=questions.map((_,i)=>`<div class="h-1 flex-1 rounded-full" style="background:${i<=current?'#6b805c':'#e1e3d7'}"></div>`).join('');
 $('topic').textContent=q.topic; $('sentence').replaceChildren();
 q.tokens.forEach((token,i)=>{const b=document.createElement('button');b.className='word';b.textContent=token;b.setAttribute('aria-pressed','false');b.onclick=()=>select(i);$('sentence').append(b,document.createTextNode(' '));});
@@ -186,7 +198,7 @@ q.options.forEach((option,i)=>{const b=document.createElement('button');b.classN
 ['choicesSection','feedback','nextWrap'].forEach(id=>$(id).hidden=true);
 $('next').innerHTML=current===questions.length-1?'查看本轮成绩 <span class="ml-5">→</span>':'下一题 <span class="ml-5">→</span>';
 }
-function select(i){if(answered)return;playSound(i===questions[current].target?'correct':'wrong');selected=i;[...$('sentence').querySelectorAll('button')].forEach((b,n)=>{b.classList.toggle('selected',n===i);b.setAttribute('aria-pressed',String(n===i));});$('hint').textContent=`已标记「${questions[current].tokens[i]}」，请选择下方错误类型。`;$('choicesSection').hidden=false;}
+function select(i){if(answered)return;if(firstSelected===null)firstSelected=i;playSound(i===questions[current].target?'correct':'wrong');selected=i;[...$('sentence').querySelectorAll('button')].forEach((b,n)=>{b.classList.toggle('selected',n===i);b.setAttribute('aria-pressed',String(n===i));});$('hint').textContent=`已标记「${questions[current].tokens[i]}」，请选择下方错误类型。`;$('choicesSection').hidden=false;}
 function escapeHTML(text){return text.replace(/[&<>"']/g,character=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[character]));}
 function correctionMarkup(q){
  const before=q.tokens.slice(0,q.target).join(' '),after=q.tokens.slice(q.target+1).join(' ');
@@ -194,17 +206,17 @@ function correctionMarkup(q){
  const replacement=q.correction.slice(prefix.length,q.correction.length-suffix.length);
  return escapeHTML(prefix)+'<del style="color:#ad4d37;text-decoration-thickness:2px">'+escapeHTML(q.tokens[q.target])+'</del> <ins style="color:#325535;text-decoration:none;border-bottom:2px solid #78966a;font-weight:600">'+escapeHTML(replacement)+'</ins>'+escapeHTML(suffix);
 }
-function answer(i){if(answered||selected===null)return;answered=true;const q=questions[current],found=selected===q.target,classified=i===q.category,correct=found&&classified;if(correct)score++;playSound(correct?'correct':'wrong');
+function answer(i){if(answered||selected===null)return;answered=true;const q=questions[current],found=selected===q.target,classified=i===q.category,correct=found&&classified;if(correct)score++;sessionAttempts.push({firstLocated:firstSelected===q.target,classified,finalLocated:found});playSound(correct?'correct':'wrong');
 [...$('sentence').querySelectorAll('button')].forEach((b,n)=>{b.disabled=true;b.classList.remove('selected');b.classList.toggle('answer',n===q.target);b.classList.toggle('missed',n===selected&&!found);});
 [...$('choices').children].forEach((b,n)=>{b.disabled=true;b.classList.toggle('correct',n===q.category);b.classList.toggle('wrong',n===i&&!classified);});
 $('hint').textContent=`正确标记：${q.tokens[q.target]} · ${q.options[q.category]}`;
-$('scoreLabel').textContent=`已答对 ${score} 题`;
+updateSessionLabel();
 $('feedback').style.background=correct?'#edf3e7':'#fcf2eb';$('feedback').style.borderColor=correct?'#d4e0c9':'#eedbce';
 $('feedback').innerHTML=`<div class="font-semibold text-sm mb-5">${correct?'✅ 找得准，改得对！':!found?'❌ 目标词选错了，再看一下绿色标记。':'❌ 找对了位置，但错误类型还差一点。'}</div><div class="tiny text-[#7b8172] mb-2">Correction</div><p class="serif text-xl leading-relaxed mb-4">${correctionMarkup(q)}</p><div class="tiny text-[#7b8172] mb-2">Explanation</div><p class="text-sm leading-7 m-0">${q.explanation}</p>`;
 $('feedback').hidden=false;$('nextWrap').hidden=false;
 }
-$('next').onclick=()=>{if(!answered)return;if(current<questions.length-1){playSound('next');current++;render();}else{playSound('complete');$('game').hidden=true;$('results').hidden=false;$('resultScore').textContent=`${score} / ${questions.length}`;$('resultText').textContent=score===questions.length?'全对！你已经能准确定位错误，并判断修改原因。':`你有 ${score} 题同时找对位置和类型。再练一轮，把容易漏掉的表达记牢。`;$('restart').focus();}};
-$('restart').onclick=()=>{playSound('next');questions=drawQuestions();current=0;score=0;$('results').hidden=true;$('game').hidden=false;render();};
+$('next').onclick=()=>{if(!answered)return;if(current<questions.length-1){playSound('next');current++;render();}else{playSound('complete');$('game').hidden=true;$('results').hidden=false;const stats=sessionStats();$('resultScore').textContent=`完成 ${stats.completed} 题`;$('resultText').textContent=`定位正确 ${stats.located}/${stats.completed}（${stats.locationRate}%） · 类型判断正确 ${stats.classified}/${stats.completed}（${stats.typeRate}%）`;$('restart').focus();}};
+$('restart').onclick=()=>{playSound('next');questions=drawQuestions();current=0;score=0;sessionAttempts=[];firstSelected=null;$('results').hidden=true;$('game').hidden=false;render();};
 render();
 </script>
 </body>
