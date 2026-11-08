@@ -10,15 +10,17 @@
 </head>
 <body>
 <div class="max-w-5xl mx-auto px-5 sm:px-10">
-<header class="flex justify-between items-center py-7 border-b border-[#dedfd5]">
+<header class="flex justify-between items-center py-3 border-b border-[#dedfd5]">
 <a href="./index.html" class="flex items-center gap-2.5 no-underline text-inherit"><span class="w-8 h-8 bg-[#bd5438] rounded-full grid place-items-center text-white text-lg" aria-hidden="true">✎</span><span class="font-bold tracking-tight text-lg">red pen<span class="text-[#bd5438]">.</span></span></a>
 <button id="soundToggle" type="button" class="text-xs text-[#64755a] border border-[#dedfd5] rounded-full px-3 py-2" aria-pressed="true">♪ 音效开</button>
 </header>
-<main class="max-w-2xl mx-auto pt-10 sm:pt-14 pb-10">
-<div class="flex items-center gap-2 text-xs text-[#64755a] font-medium"><span class="w-1.5 h-1.5 rounded-full bg-[#718463]"></span> 每天练一点，换个考官视角</div>
-<h1 class="text-3xl sm:text-4xl font-bold tracking-tight mt-4 mb-3">这一次，你来当考官。</h1>
-<p class="text-sm sm:text-base text-[#7a7e71] leading-relaxed">每轮 5 题，句句配图：练表达，也练读图。</p>
-<section id="game" class="mt-9">
+<main class="max-w-2xl mx-auto pt-3 sm:pt-4 pb-10">
+<div class="mb-5">
+<p class="text-xs text-[#64755a] m-0">每天练一点，换个考官视角</p>
+<h1 class="text-xl sm:text-2xl font-bold tracking-tight mt-1 mb-1">这一次，你来当考官。</h1>
+<p class="text-xs text-[#7a7e71] leading-relaxed m-0">先看图，点击句中错误，再判断类型或选择正确改法。</p>
+</div>
+<section id="game">
 <div class="flex justify-between text-xs mb-3"><span id="progressLabel" class="font-semibold">QUESTION 01 <span class="text-[#94988a]">/ 05</span></span><span id="scoreLabel" class="text-[#727969]">已完成 0 题</span></div>
 <div id="progress" class="flex gap-1.5 mb-6" aria-label="关卡进度"></div>
 <article class="bg-white rounded-2xl border border-[#e0e1d7] shadow-[0_5px_24px_#29351f05] overflow-hidden">
@@ -157,8 +159,17 @@ function shuffle(pool){
  for(let i=pool.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]];}
  return pool;
 }
+let activeFilter='all';
+function matchesFilter(q,filter){
+ const basic=q.chartSpec?.type==='line';
+ const original=q.topic==='TASK 1 / CHART CHECK';
+ const ielts=q.chartId==='co2';
+ return filter==='all'||(filter==='line'&&(basic||original||ielts))||(filter==='basic-line'&&basic)||(filter==='original-line'&&original)||(filter==='ielts-line'&&ielts);
+}
 function drawQuestions(){
- return shuffle([...shuffle(questionBank.filter(q=>q.reading)).slice(0,2),...shuffle(questionBank.filter(q=>!q.reading)).slice(0,3)]);
+ const pool=questionBank.filter(q=>matchesFilter(q,activeFilter));
+ if(activeFilter!=='all')return pool;
+ return shuffle([...shuffle(pool.filter(q=>q.reading)).slice(0,2),...shuffle(pool.filter(q=>!q.reading)).slice(0,3)]);
 }
 let questions=drawQuestions();
 const $ = id => document.getElementById(id);
@@ -282,8 +293,15 @@ $('feedback').style.background=correct?'#edf3e7':'#fcf2eb';$('feedback').style.b
 $('feedback').innerHTML=`<div class="font-semibold text-sm mb-5">${correct?'✅ 找得准，改得对！':!found?'❌ 目标词选错了，再看一下绿色标记。':(q.mode==='repair'?'❌ 找对了位置，但替换表达还不正确。':'❌ 找对了位置，但错误类型还差一点。')}</div><div class="tiny text-[#7b8172] mb-2">Correction</div><p class="serif text-xl leading-relaxed mb-4">${correctionMarkup(q)}</p><div class="tiny text-[#7b8172] mb-2">Explanation</div><p class="text-sm leading-7 m-0">${q.explanation}</p>`;
 $('feedback').hidden=false;$('nextWrap').hidden=false;
 }
-$('next').onclick=()=>{if(!answered)return;if(current<questions.length-1){playSound('next');current++;render();}else{playSound('complete');$('game').hidden=true;$('results').hidden=false;const stats=sessionStats();$('resultScore').textContent=`完成 ${stats.completed} 题`;$('resultText').textContent=`定位正确 ${stats.located}/${stats.completed}（${stats.locationRate}%）`;$('resultSkills').textContent=`${[stats.types.length?`类型判断正确 ${stats.types.filter(a=>a.classified).length}/${stats.types.length}`:'',stats.repairs.length?`修改正确 ${stats.repairs.filter(a=>a.classified).length}/${stats.repairs.length}`:''].filter(Boolean).join(' · ')}`;$('restart').focus();}};
-$('restart').onclick=()=>{playSound('next');questions=drawQuestions();current=0;score=0;sessionAttempts=[];firstSelected=null;$('results').hidden=true;$('game').hidden=false;render();};
+$('next').onclick=()=>{if(!answered)return;if(current<questions.length-1){playSound('next');current++;render();}else{playSound('complete');$('game').hidden=true;$('results').hidden=false;const stats=sessionStats();$('resultScore').textContent=`完成 ${stats.completed} 题`;$('resultText').textContent=`定位正确 ${stats.located}/${stats.completed}（${stats.locationRate}%）`;$('resultSkills').textContent=`纠错正确 ${stats.classified}/${stats.completed}（${stats.typeRate}%）`;$('restart').focus();}};
+function startRound(){playSound('next');questions=drawQuestions();current=0;score=0;sessionAttempts=[];firstSelected=null;$('results').hidden=true;$('game').hidden=false;render();}
+$('restart').onclick=startRound;
+window.filterQuestions=function(group='all'){
+ const groups=['all','line','basic-line','original-line','ielts-line'];
+ if(!groups.includes(group))throw new Error('可选题组：'+groups.join(', '));
+ activeFilter=group;startRound();
+ return `已载入 ${questions.length} 道题`;
+};
 render();
 </script>
 </body>
